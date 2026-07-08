@@ -5,7 +5,7 @@ try {
   const util = await import('node:util');
 
   if (typeof globalThis.ReadableStream === 'undefined') {
-    globalThis.ReadableStream = webStream.ReadableStream;
+    globalThis.ReadableStream = webStream.ReadableStream as typeof globalThis.ReadableStream;
   }
 
   if (typeof globalThis.TextEncoder === 'undefined') {
@@ -13,7 +13,7 @@ try {
   }
 
   if (typeof globalThis.TextDecoder === 'undefined') {
-    globalThis.TextDecoder = util.TextDecoder;
+    globalThis.TextDecoder = util.TextDecoder as typeof globalThis.TextDecoder;
   }
 } catch {
   // jsdom / Node already provides these in most test environments.

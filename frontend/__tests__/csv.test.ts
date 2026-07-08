@@ -10,14 +10,11 @@ describe('parseCSVPreview', () => {
   });
 
   it('returns headers, rows, and totalRows for a standard CSV', async () => {
-    vi.mocked(Papa.parse).mockImplementation((_file: unknown, options: unknown) => {
-      const opts = options as Parameters<typeof Papa.parse>[1];
-      const step = opts?.step as ((result: { data: Record<string, string>; meta: { fields: string[] } }) => void) | undefined;
-      const complete = opts?.complete as (() => void) | undefined;
-
-      step?.({ data: { Name: 'John', Email: 'john@test.com' }, meta: { fields: ['Name', 'Email'] } });
-      step?.({ data: { Name: 'Jane', Email: 'jane@test.com' }, meta: { fields: ['Name', 'Email'] } });
-      complete?.();
+    (vi.mocked(Papa.parse).mockImplementation as any)((_file: unknown, options: unknown) => {
+      const opts = options as { step?: (result: { data: Record<string, string>; meta: { fields: string[] } }) => void; complete?: () => void };
+      opts.step?.({ data: { Name: 'John', Email: 'john@test.com' }, meta: { fields: ['Name', 'Email'] } });
+      opts.step?.({ data: { Name: 'Jane', Email: 'jane@test.com' }, meta: { fields: ['Name', 'Email'] } });
+      opts.complete?.();
     });
 
     const file = new File([''], 'test.csv', { type: 'text/csv' });
@@ -30,15 +27,12 @@ describe('parseCSVPreview', () => {
   });
 
   it('limits preview rows to 50 but counts all rows in totalRows', async () => {
-    vi.mocked(Papa.parse).mockImplementation((_file: unknown, options: unknown) => {
-      const opts = options as Parameters<typeof Papa.parse>[1];
-      const step = opts?.step as ((result: { data: Record<string, string>; meta: { fields: string[] } }) => void) | undefined;
-      const complete = opts?.complete as (() => void) | undefined;
-
+    (vi.mocked(Papa.parse).mockImplementation as any)((_file: unknown, options: unknown) => {
+      const opts = options as { step?: (result: { data: Record<string, string>; meta: { fields: string[] } }) => void; complete?: () => void };
       for (let i = 0; i < 100; i += 1) {
-        step?.({ data: { Name: `Person ${i}` }, meta: { fields: ['Name'] } });
+        opts.step?.({ data: { Name: `Person ${i}` }, meta: { fields: ['Name'] } });
       }
-      complete?.();
+      opts.complete?.();
     });
 
     const file = new File([''], 'big.csv', { type: 'text/csv' });
@@ -49,10 +43,9 @@ describe('parseCSVPreview', () => {
   });
 
   it('rejects with a descriptive error on parse failure', async () => {
-    vi.mocked(Papa.parse).mockImplementation((_file: unknown, options: unknown) => {
-      const opts = options as Parameters<typeof Papa.parse>[1];
-      const error = opts?.error as ((err: { message: string }) => void) | undefined;
-      error?.({ message: 'Unexpected token' });
+    (vi.mocked(Papa.parse).mockImplementation as any)((_file: unknown, options: unknown) => {
+      const opts = options as { error?: (err: { message: string }) => void };
+      opts.error?.({ message: 'Unexpected token' });
     });
 
     const file = new File([''], 'bad.csv', { type: 'text/csv' });
@@ -60,10 +53,9 @@ describe('parseCSVPreview', () => {
   });
 
   it('returns empty rows and zero totalRows for a CSV with no data', async () => {
-    vi.mocked(Papa.parse).mockImplementation((_file: unknown, options: unknown) => {
-      const opts = options as Parameters<typeof Papa.parse>[1];
-      const complete = opts?.complete as (() => void) | undefined;
-      complete?.();
+    (vi.mocked(Papa.parse).mockImplementation as any)((_file: unknown, options: unknown) => {
+      const opts = options as { complete?: () => void };
+      opts.complete?.();
     });
 
     const file = new File([''], 'empty.csv', { type: 'text/csv' });
